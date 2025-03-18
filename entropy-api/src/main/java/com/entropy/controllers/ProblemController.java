@@ -7,6 +7,7 @@ import com.entropy.model.dto.testCase.TestCaseDTO;
 import com.entropy.repository.ProblemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class ProblemController {
     private final ProblemRepository problemRepository;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Problem> createProblem(@RequestBody CreateProblemDTO dto) {
         Problem newProblem = new Problem();
         newProblem.setTitle(dto.title());
@@ -33,6 +35,7 @@ public class ProblemController {
     }
 
     @PostMapping("/{problemId}/testCases")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TestCaseDTO> addTestCase(
             @PathVariable Long problemId,
             @RequestBody ProblemTestCase testCase) {

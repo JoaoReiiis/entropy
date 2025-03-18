@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,6 +44,12 @@ public class CodeExecutorController {
             @RequestParam("problemId") Long problemId,
             @RequestParam("userId") Long userId) {
 
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        boolean isAdm= authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
         try {
             Users user = usersRepository.findById(userId)
                     .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
@@ -65,7 +73,7 @@ public class CodeExecutorController {
                     new SubmissionResponseDTO(
                             problem.getId(),
                             problem.getTitle(),
-                            result.testResults(),
+                            isAdm? result.testResults() : null,
                             user.getUsername(),
                             result.updatedUserScore(),
                             result.problemSolved(),

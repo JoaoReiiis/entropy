@@ -1,5 +1,6 @@
 package com.entropy.controllers;
 
+import com.entropy.model.Role;
 import com.entropy.model.Users;
 import com.entropy.model.dto.user.CreateUserDTO;
 import com.entropy.model.dto.user.UpdateUserDTO;
@@ -9,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +33,7 @@ public class UserController {
         Users newUser = new Users();
         newUser.setUsername(dto.username());
         newUser.setLogin(dto.login());
-        newUser.setRole(dto.role());
+        newUser.setRole(Role.USER);
         newUser.setPassword(new BCryptPasswordEncoder().encode(dto.password()));
         newUser.setScore(0);
 
@@ -41,7 +43,9 @@ public class UserController {
                 .body(responseDTO(newUser));
     }
 
+
     @GetMapping("/{id}")
+    @PreAuthorize("#id == authentication.principal.id or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> findById(@PathVariable Long id){
         Optional<Users> usuario = usersRepository.findById(id);
 
@@ -53,6 +57,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("#id == authentication.principal.id or hasRole('ADMIN')")
     public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long id, @Valid @RequestBody UpdateUserDTO dto) {
         Optional<Users> user = usersRepository.findById(id);
 
@@ -69,6 +74,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("#id == authentication.principal.id or hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         if (!usersRepository.existsById(id)) {
             throw new RuntimeException("Usuário não encontrado");
@@ -79,6 +85,7 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserResponseDTO>> listAll() {
         List<Users> usuarios = usersRepository.findAll();
         List<UserResponseDTO> resposta = usuarios.stream().map(this::responseDTO).toList();
